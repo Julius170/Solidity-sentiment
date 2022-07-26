@@ -6,7 +6,7 @@ pragma solidity ^0.8.7;
 contract MarketSentiment {
     address public owner;
 
-    //Initialized the owner off the contract to the contract's sender
+    //Initialized the owner of the contract to the contract's deployer
     constructor() {
         // owner of the contract
         owner = msg.sender;
@@ -14,7 +14,6 @@ contract MarketSentiment {
 
     // struct for details of each votes
     struct token {
-        address admin;
         bool exists;
         bool ended;
         uint256 upVotes;
@@ -50,7 +49,6 @@ contract MarketSentiment {
         require(!tokens[_token].exists, "token already exist");
         // creating new token of type token, mapping the string _token to struct token
         tokens[_token].exists = true;
-        tokens[_token].admin = msg.sender;
     }
 
     /// @dev function for voting up or down for new token
@@ -80,9 +78,9 @@ contract MarketSentiment {
         emit tokenUpdated(t.upVotes, t.downVotes, msg.sender, _token);
     }
 
-    function endVote(string calldata _token) external tokenExists(_token) {
+    /// @dev function for ending the voting period on a token
+    function endVote(string calldata _token) external tokenExists(_token) verifyOwner() {
         require(!tokens[_token].ended, "voting is already over");
-        require(tokens[_token].admin == msg.sender, "Unauthorized caller");
         tokens[_token].ended = true;
     }
 
