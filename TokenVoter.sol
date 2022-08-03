@@ -17,6 +17,7 @@ contract MarketSentiment {
         bool exists;
         bool ended;
         uint256 upVotes;
+        uint256 endTimeStamp;
         uint256 downVotes;
         mapping(address => bool) Voters;
     }
@@ -45,10 +46,12 @@ contract MarketSentiment {
     }
 
     /// @dev adding a new token to the sentiment application
-    function addtoken(string calldata _token) external verifyOwner {
+    function addtoken(string calldata _token, uint _time) external verifyOwner {
         require(!tokens[_token].exists, "token already exist");
         // creating new token of type token, mapping the string _token to struct token
         tokens[_token].exists = true;
+        //Time in minutes
+        tokens[_token].endTimeStamp = block.timestamp + (_time * 60);
     }
 
     /// @dev function for voting up or down for new token
@@ -57,6 +60,7 @@ contract MarketSentiment {
         tokenExists(_token)
     {
         require(!tokens[_token].ended, "voting for token is over");
+        require(block.timestamp < tokens[_token].endTimeStamp, "Voting over");
         // to check if voter has not previously voted
         require(
             !tokens[_token].Voters[msg.sender],
@@ -89,11 +93,11 @@ contract MarketSentiment {
         public
         view
         tokenExists(_token)
-        returns (uint256 upVotes, uint256 downVotes)
+        returns (uint256 upVotes, uint256 downVotes, uint256 endTimeStamp)
     {
         // create temporary token struct
         token storage t = tokens[_token];
 
-        return (t.upVotes, t.downVotes);
+        return (t.upVotes, t.downVotes, t.endTimeStamp);
     }
 }
